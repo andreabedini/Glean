@@ -3,7 +3,7 @@
 Work in progress: building Glean with [Buck2](https://buck2.build), with
 the Haskell rules of [timbuktu](https://github.com/andreabedini/timbuktu)
 and hsthrift's Buck2 build. So far this covers the packages of
-`cabal.project` but glean-clang (see "Not yet").
+`cabal.project`, but not the test suites (see "Not yet").
 
 buck2 itself, buildifier and yq are in `mise.toml`, at the versions
 timbuktu uses:
@@ -93,8 +93,18 @@ it rather than the pinned commit, in `.buckconfig.local`:
 A cell has to be inside the project. Buck2 may not notice files of a
 directory made after its daemon started: `buck2 kill` then.
 
+## glean-clang
+
+glean-clang is `build-type: Custom`: its Setup.hs only finds LLVM and Clang
+19 with `llvm-config-19`. The plan takes it as Simple (`--as-simple
+glean-clang`), and the libraries it gets from LLVM are targets of
+`system/BUCK` given with `--extra-library` (`clang-cpp`, `LLVM`; and glog,
+gflags and fmt, the ones folly links). They need LLVM and Clang 19 (on
+Fedora `llvm19-devel` and `clang19-devel`, in `/usr/lib64/llvm19`; set
+`glean.llvm_prefix` in `.buckconfig.local` for another prefix):
+
+    buck2 build //:exe-clang-index //:exe-clang-derive
+
 ## Not yet
 
-- glean-clang: it is `build-type: Custom` (its Setup.hs finds LLVM 19 with
-  llvm-config), which the plan's local packages do not support.
 - The test suites.

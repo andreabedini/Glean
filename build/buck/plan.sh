@@ -4,6 +4,8 @@ exec buck2 bxl timbuktu//rules/haskell/cabal_install/plan.bxl:generate -- \
   --local-package . \
   --local-package glean/lsp \
   --local-package glean/lmdb-clib \
+  --local-package glean/lang/clang \
+  --as-simple glean-clang \
   --local-package hsthrift//common/util=hsthrift//:fb-util-0.2.0.1-package \
   --local-package hsthrift//common/github=hsthrift//:fb-stubs-0.1.0.1-package \
   --local-package hsthrift//common/mangle=hsthrift//:mangle-0.1.0.1-package \
@@ -26,6 +28,11 @@ exec buck2 bxl timbuktu//rules/haskell/cabal_install/plan.bxl:generate -- \
   --pkgconfig zlib=hsthrift//build/buck/deps/system:zlib \
   --pkgconfig icu-uc=//build/buck/system:icu-uc \
   --pkgconfig gtest_main=//build/buck/system:gtest_main \
+  --extra-library clang-cpp=//build/buck/system:clang-cpp \
+  --extra-library LLVM=//build/buck/system:llvm \
+  --extra-library glog=hsthrift//build/buck/deps/system:glog \
+  --extra-library gflags=hsthrift//build/buck/deps/system:gflags \
+  --extra-library fmt=hsthrift//build/buck/deps/fmt:fmt \
   --generated hsthrift//lib/gen-hs2=//build/buck:hsthrift-thrift-lib \
   --generated hsthrift//lib/test/gen-hs2=//build/buck:hsthrift-thrift-lib-test \
   --generated hsthrift//http/test/gen-hs2=//build/buck:hsthrift-thrift-http-test \

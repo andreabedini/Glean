@@ -15,3 +15,41 @@ prebuilt_cxx_library(
     exported_linker_flags = ["-lgtest_main", "-lgtest"],
     visibility = ["PUBLIC"],
 )
+
+# LLVM and Clang 19 for glean-clang, whose Setup.hs finds them with
+# llvm-config-19: the same flags (but -std, which the package sets). On
+# Fedora: llvm19-devel and clang19-devel, in /usr/lib64/llvm19; elsewhere
+# set glean.llvm_prefix in .buckconfig.local.
+_LLVM = read_config("glean", "llvm_prefix", "/usr/lib64/llvm19")
+
+_LLVM_FLAGS = [
+    "-I{}/include".format(_LLVM),
+    "-D_GNU_SOURCE",
+    "-D__STDC_CONSTANT_MACROS",
+    "-D__STDC_FORMAT_MACROS",
+]
+
+prebuilt_cxx_library(
+    name = "llvm",
+    header_only = True,
+    exported_preprocessor_flags = _LLVM_FLAGS,
+    exported_linker_flags = [
+        "-L{}/lib".format(_LLVM),
+        "-Wl,-rpath,{}/lib".format(_LLVM),
+        "-lLLVM-19",
+    ],
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_cxx_library(
+    name = "clang-cpp",
+    header_only = True,
+    exported_preprocessor_flags = _LLVM_FLAGS,
+    exported_linker_flags = [
+        "-L{}/lib".format(_LLVM),
+        "-Wl,-rpath,{}/lib".format(_LLVM),
+        "-lclang-cpp",
+    ],
+    exported_deps = [":llvm"],
+    visibility = ["PUBLIC"],
+)
