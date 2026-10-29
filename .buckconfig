@@ -1,0 +1,33 @@
+[cells]
+  root = .
+  prelude = prelude
+  hsthrift = hsthrift
+  toolchains = hsthrift/build/buck/toolchains
+  timbuktu = hsthrift/build/buck/timbuktu
+  none = none
+
+[cell_aliases]
+  config = prelude
+  ovr_config = prelude
+  fbcode = none
+  fbsource = none
+  fbcode_macros = none
+  buck = none
+
+[external_cells]
+  prelude = bundled
+  timbuktu = git
+
+# The Haskell rules: https://github.com/andreabedini/timbuktu
+[external_cell_timbuktu]
+  git_origin = https://github.com/andreabedini/timbuktu.git
+  commit_hash = 17a51dd6eb0c34e81051f3d14d54c835f1ea8ea5
+
+[build]
+  execution_platforms = prelude//platforms:default
+
+[parser]
+  target_platform_detector_spec = target:root//...->prelude//platforms:default target:hsthrift//...->prelude//platforms:default target:toolchains//...->prelude//platforms:default target:timbuktu//...->prelude//platforms:default
+
+[project]
+  ignore = .git, .jj, dist-newstyle, .build, hsthrift/.git, hsthrift/.jj, hsthrift/dist-newstyle, hsthrift/buck-out

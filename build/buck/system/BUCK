@@ -1,0 +1,17 @@
+# The system libraries Glean's packages use that hsthrift's build/buck/deps
+# does not have, as linker flags (see hsthrift's build/buck/deps/system).
+# On Fedora: libicu-devel, gtest-devel.
+
+prebuilt_cxx_library(
+    name = "icu-uc",
+    header_only = True,
+    exported_linker_flags = ["-licuuc", "-licudata"],
+    visibility = ["PUBLIC"],
+)
+
+prebuilt_cxx_library(
+    name = "gtest_main",
+    header_only = True,
+    exported_linker_flags = ["-lgtest_main", "-lgtest"],
+    visibility = ["PUBLIC"],
+)

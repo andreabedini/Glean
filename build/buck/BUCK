@@ -1,0 +1,221 @@
+# The code that the Makefile generates before Cabal runs, for the
+# directories of the build plan (the root BUCK file) given to plan.bxl with
+# --generated: see README.md here.
+
+load("@hsthrift//build/buck/thrift:defs.bzl", "thrift_file", "thrift_hs")
+
+GLEAN = "//:glean-0.2.0.1-package"
+THRIFT_LIB = "hsthrift//:thrift-lib-0.2.0.0-package"
+
+# hsthrift's thrift-lib (lib/gen-hs2), as hsthrift//build/buck/thrift makes
+# it but with the thrift-compiler of this plan, not of hsthrift's.
+thrift_hs(
+    name = "hsthrift-thrift-lib",
+    files = [
+        thrift_file(THRIFT_LIB, "if/RpcOptions.thrift"),
+        thrift_file(THRIFT_LIB, "if/ApplicationException.thrift"),
+    ],
+    annotation = "hsthrift//thrift:annotation",
+    visibility = ["PUBLIC"],
+)
+
+# hsthrift's test libraries of thrift-lib and thrift-http (lib/test/gen-hs2,
+# http/test/gen-hs2), which the plan has too, as hsthrift//build/buck/thrift.
+HSTHRIFT_TEST = [
+    thrift_file(THRIFT_LIB, "thrift/annotation/thrift.thrift"),
+    thrift_file(THRIFT_LIB, "thrift/annotation/scope.thrift"),
+    thrift_file(THRIFT_LIB, "test/if/math.thrift", ["--use-int"]),
+    thrift_file(THRIFT_LIB, "test/if/echoer.thrift", ["--use-int"]),
+]
+
+thrift_hs(
+    name = "hsthrift-thrift-lib-test",
+    files = HSTHRIFT_TEST + [
+        thrift_file("hsthrift//:thrift-tests-0.1.0.0-package", "if/hs_test.thrift"),
+    ],
+    annotation = "hsthrift//thrift:annotation",
+    visibility = ["PUBLIC"],
+)
+
+thrift_hs(
+    name = "hsthrift-thrift-http-test",
+    files = HSTHRIFT_TEST,
+    annotation = "hsthrift//thrift:annotation",
+    visibility = ["PUBLIC"],
+)
+
+# The Makefile's thrift-glean-hs: each directory is the -o of its files.
+# The annotations are Glean's own, in thrift/annotation.
+[
+    thrift_hs(
+        name = name,
+        files = [thrift_file(GLEAN, f) for f in files],
+        annotation = None,
+        visibility = ["PUBLIC"],
+    )
+    for name, files in {
+        "thrift-annotation": [
+            "thrift/annotation/cpp.thrift",
+            "thrift/annotation/hack.thrift",
+            "thrift/annotation/rust.thrift",
+            "thrift/annotation/scope.thrift",
+            "thrift/annotation/thrift.thrift",
+        ],
+        "thrift-config": ["glean/config/service.thrift"],
+        "thrift-config-client": ["glean/config/client/client_config.thrift"],
+        "thrift-config-server": ["glean/config/server/server_config.thrift"],
+        "thrift-github-if": [
+            "glean/github/if/fb303.thrift",
+            "glean/github/if/fb303_core.thrift",
+        ],
+        "thrift-glass": ["glean/glass/if/glass.thrift"],
+        "thrift-if": ["glean/if/glean.thrift"],
+        "thrift-if-facebook": ["glean/if/facebook/auth.thrift"],
+        "thrift-if-index": ["glean/if/index.thrift"],
+        "thrift-if-internal": ["glean/if/internal.thrift"],
+    }.items()
+]
+
+# The Makefile's gen-bytecode: glean/hs/Glean/RTS/Bytecode/Gen. The
+# generator is an executable of the plan, built for the target platform (as
+# the libraries are), not for the tools.
+genrule(
+    name = "bytecode-hs",
+    out = "Gen",
+    cmd = "$(exe_target //:exe-gen-bytecode-hs) --install_dir=$TMP && mv $TMP/Glean/RTS/Bytecode/Gen $OUT",
+    visibility = ["PUBLIC"],
+)
+
+# The Makefile's gen-schema: the Thrift, Haskell and C++ made of the schema
+# (glean/schema/source).
+genrule(
+    name = "schema",
+    out = "schema",
+    cmd = " && ".join([
+        "S=`realpath $(location {})`".format(GLEAN),
+        "$(exe_target //:exe-gen-schema) --install_dir $OUT --dir $S/glean/schema/source --thrift glean/schema --hs glean/schema --cpp glean/lang/clang/schema.h",
+    ]),
+)
+
+genrule(
+    name = "schema-hs",
+    out = "hs",
+    cmd = "cp -R $(location :schema)/glean/schema/hs $OUT",
+    visibility = ["PUBLIC"],
+)
+
+# glean/schema/cpp, where the Makefile copies schema.h.
+genrule(
+    name = "schema-cpp",
+    out = "cpp",
+    cmd = "mkdir -p $OUT && cp $(location :schema)/glean/lang/clang/schema.h $OUT/",
+    visibility = ["PUBLIC"],
+)
+
+# The Makefile's SCHEMAS, compiled as thrift-schema-hs does.
+SCHEMAS = [
+    "anglelang",
+    "buck",
+    "builtin",
+    "chef",
+    "code",
+    "code_anglelang",
+    "code_buck",
+    "code_chef",
+    "code_csharp",
+    "code_cxx",
+    "code_dataswarm",
+    "code_erlang",
+    "code_fbthrift",
+    "code_flow",
+    "code_graphql",
+    "code_hack",
+    "code_hs",
+    "code_java",
+    "code_kotlin",
+    "code_lsif",
+    "code_swift",
+    "codemarkup",
+    "codemarkup_anglelang",
+    "codemarkup_buck",
+    "codemarkup_chef",
+    "codemarkup_csharp",
+    "codemarkup_cxx",
+    "codemarkup_dataswarm",
+    "codemarkup_erlang",
+    "codemarkup_fbthrift",
+    "codemarkup_flow",
+    "codemarkup_graphql",
+    "codemarkup_hack",
+    "codemarkup_haskell",
+    "codemarkup_java",
+    "codemarkup_lsif",
+    "codemarkup_pp",
+    "codemarkup_python",
+    "codemarkup_scip",
+    "codemarkup_search",
+    "codemarkup_swift",
+    "codemarkup_types",
+    "code_pp",
+    "code_python",
+    "code_scip",
+    "csharp",
+    "cxx1",
+    "dataswarm",
+    "digest",
+    "dyn",
+    "erlang",
+    "flow",
+    "gencode",
+    "glass",
+    "glean_test",
+    "graphql",
+    "hack",
+    "hs",
+    "java_alpha",
+    "javakotlin_alpha",
+    "kotlin_alpha",
+    "lsif",
+    "lsif_types",
+    "pp1",
+    "python",
+    "scip",
+    "search_anglelang",
+    "search_chef",
+    "search_code",
+    "search_cxx",
+    "search_erlang",
+    "search_buck",
+    "search_hack",
+    "search_java",
+    "search_kind_cxx",
+    "search_hs",
+    "search_pp",
+    "src",
+    "symbolid_cxx",
+    "symbolid_java",
+    "symbolid_kotlin",
+    "sys",
+    "fbthrift",
+]
+
+genrule(
+    name = "schema-thrift-hs",
+    out = "gen-hs2",
+    cmd = "\n".join([
+        "set -e",
+        "D=`realpath $TMP`/src",
+        "T=`realpath $TMP`/out",
+        "mkdir -p $D $T",
+        "cp -RL $(location {})/. $D/".format(GLEAN),
+        "chmod -R u+w $D/glean/schema",
+        "mkdir -p $D/glean/schema/thrift",
+        "cp $(location :schema)/glean/schema/thrift/* $D/glean/schema/thrift/",
+    ] + [
+        "$(exe_target //:exe-thrift-compiler) --hs -I $D glean/schema/thrift/{}.thrift -o $T".format(s)
+        for s in SCHEMAS
+    ] + [
+        "mv $T/gen-hs2 $OUT",
+    ]),
+    visibility = ["PUBLIC"],
+)

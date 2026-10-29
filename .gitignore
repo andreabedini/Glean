@@ -16,3 +16,8 @@ dump.lsif
 settings.mk
 .vscode
 glean.code-workspace
+
+# Buck2
+buck-out
+.buckconfig.local
+.timbuktu
